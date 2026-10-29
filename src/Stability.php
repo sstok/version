@@ -52,6 +52,16 @@ enum Stability: int
         };
     }
 
+    public function toIdentifier(): VersionIndentifier
+    {
+        return match ($this) {
+            self::Alpha => VersionIndentifier::Alpha,
+            self::Beta => VersionIndentifier::Beta,
+            self::Rc => VersionIndentifier::Rc,
+            self::Stable => VersionIndentifier::Stable,
+        };
+    }
+
     public function isLowerThan(self $other): bool
     {
         return $this->value < $other->value;
