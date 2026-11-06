@@ -403,11 +403,36 @@ class ContinuesVersionsValidatorTest extends TestCase
     private static function assertVersionsEquals(array $expected, array $candidates): void
     {
         $formatter = static fn (Version $version): string => \sprintf("'%s' => '%s'", $version->format(), $version->full);
+
+        // When the count does not match we don't have to check equality of the keys
+        // as the assertion will fail anyway informing of expected and actual values.
+        if (count($candidates) !== count($expected)) {
+            $candidatesWithKey = [];
+
+            foreach ($candidates as $v) {
+                $candidatesWithKey[$v->format()] = $v;
+            }
+
+            self::assertEquals(
+                $expected,
+                $candidatesWithKey,
+                \sprintf(
+                    'Expected [%s] but got [%s]',
+                    implode(', ', array_map($formatter, $expected)),
+                    implode(', ', array_map($formatter, $candidates)),
+                ),
+            );
+
+            return;
+        }
+
         $candidatesWithKey = [];
 
         foreach ($candidates as $v) {
-            $candidatesWithKey[$v->format()] = $v;
+            $candidatesWithKey[$v->format()] = ['output_format' => $v];
         }
+
+
 
         self::assertEquals(
             $expected,
@@ -417,11 +442,6 @@ class ContinuesVersionsValidatorTest extends TestCase
                 implode(', ', array_map($formatter, $expected)),
                 implode(', ', array_map($formatter, $candidates)),
             ),
-        );
-        self::assertSame(
-            $ek = array_keys($expected),
-            $ck = array_keys($candidatesWithKey),
-            \sprintf('Versons order does not match. Expected [%s] but got [%s].', implode(', ', $ek), implode(', ', $ck)),
         );
     }
 }

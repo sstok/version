@@ -105,6 +105,27 @@ final class Version
     }
 
     /**
+     * @return array{formatted: string, full: string, version: array{major: int, minor: int, patch: int|null, build: int|null, stability: string, pre_release: int}, output_format: string, format_of_increment: string}
+     */
+    public function __debugInfo(): array
+    {
+        return [
+            'formatted' => $this->formatted,
+            'full' => $this->full,
+            'version' => [
+                'major' => $this->major,
+                'minor' => $this->minor,
+                'patch' => $this->patch,
+                'build' => $this->build,
+                'stability' => $this->stability,
+                'pre_release' => $this->metaver,
+            ],
+            'output_format' => $this->outputFormat,
+            'format_of_increment' => $this->formatOfIncrement,
+        ];
+    }
+
+    /**
      * Create a Version object from a string.
      *
      * For compatibility with Composer Semver, the build-id and -dev suffix

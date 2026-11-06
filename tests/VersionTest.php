@@ -43,6 +43,21 @@ class VersionTest extends TestCase
         self::assertEquals(5, $version->metaver);
         self::assertEquals('1.0.0.0-BETA5', $version->full);
         self::assertEquals('1.0.0-BETA5', $version->fullWithoutBuild);
+
+        self::assertEquals([
+            'formatted' => $version->formatted,
+            'full' => $version->full,
+            'version' => [
+                'major' => 1,
+                'minor' => 0,
+                'patch' => 0,
+                'build' => null,
+                'stability' => Stability::Beta,
+                'pre_release' => 5,
+            ],
+            'output_format' => $version->outputFormat,
+            'format_of_increment' => '{major}.{minor}.{?patch}.{?build}-{metaver:upper}x',
+        ], $version->__debugInfo());
     }
 
     #[Test]
@@ -88,6 +103,21 @@ class VersionTest extends TestCase
         self::assertEquals(0, $version->metaver);
         self::assertEquals('1.0.0.5', $version->full);
         self::assertEquals('1.0.0', $version->fullWithoutBuild);
+
+        self::assertEquals([
+            'formatted' => $version->formatted,
+            'full' => $version->full,
+            'version' => [
+                'major' => 1,
+                'minor' => 0,
+                'patch' => 0,
+                'build' => 5,
+                'stability' => Stability::Stable,
+                'pre_release' => 0,
+            ],
+            'output_format' => $version->outputFormat,
+            'format_of_increment' => '{major}.{minor}.{?patch}.{?build}-{metaver:upper}x',
+        ], $version->__debugInfo());
     }
 
     #[Test]
@@ -103,6 +133,21 @@ class VersionTest extends TestCase
         self::assertEquals(0, $version->metaver);
         self::assertEquals('1.0.0.0', $version->full);
         self::assertEquals('1.0.0', $version->fullWithoutBuild);
+
+        self::assertEquals([
+            'formatted' => $version->formatted,
+            'full' => $version->full,
+            'version' => [
+                'major' => 1,
+                'minor' => 0,
+                'patch' => null,
+                'build' => null,
+                'stability' => Stability::Stable,
+                'pre_release' => 0,
+            ],
+            'output_format' => $version->outputFormat,
+            'format_of_increment' => '{major}.{minor}.{?patch}.{?build}-{metaver:upper}x',
+        ], $version->__debugInfo());
     }
 
     #[Test]
@@ -117,6 +162,21 @@ class VersionTest extends TestCase
         self::assertEquals(0, $version->metaver);
         self::assertEquals('1.0.1.0', $version->full);
         self::assertEquals('1.0.1', $version->fullWithoutBuild);
+
+        self::assertEquals([
+            'formatted' => $version->formatted,
+            'full' => $version->full,
+            'version' => [
+                'major' => 1,
+                'minor' => 0,
+                'patch' => 1,
+                'build' => null,
+                'stability' => Stability::Stable,
+                'pre_release' => 0,
+            ],
+            'output_format' => $version->outputFormat,
+            'format_of_increment' => '{major}.{minor}.{?patch}.{?build}-{metaver:upper}x',
+        ], $version->__debugInfo());
     }
 
     #[Test]
