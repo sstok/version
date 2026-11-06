@@ -55,7 +55,7 @@ final class Version
     public readonly string $fullWithoutBuild;
 
     public readonly string $outputFormat;
-    private readonly string $formatOfIncrement;
+    public readonly string $outputformatOfIncrement;
     private readonly ?int $patchEmpty;
     private readonly ?int $buildEmpty;
 
@@ -85,10 +85,10 @@ final class Version
         // for as a candidate and so will ommited from the output when empty.
         if ($patch !== null && $this->outputFormat === VersionFormatter::FORMAT_DEFAULT) {
             // Default format already contains patch identifier, and build is only used when none-null.
-            $this->formatOfIncrement = $this->outputFormat;
+            $this->outputformatOfIncrement = $this->outputFormat;
         } else {
             // Output format might not contain all required identifiers.
-            $this->formatOfIncrement = self::$formatter->modifyFormat(
+            $this->outputformatOfIncrement = self::$formatter->modifyFormat(
                 $this->outputFormat,
                 patch: IdentifierMarker::WhenProvided,
                 build: IdentifierMarker::WhenProvided,
@@ -121,7 +121,7 @@ final class Version
                 'pre_release' => $this->metaver,
             ],
             'output_format' => $this->outputFormat,
-            'format_of_increment' => $this->formatOfIncrement,
+            'format_of_increment' => $this->outputformatOfIncrement,
         ];
     }
 
@@ -573,10 +573,10 @@ final class Version
         }
 
         return match ($type) {
-            VersionIndentifier::Major => new self($newValue, 0, $this->patchEmpty, build: $this->buildEmpty, outputFormat: $this->formatOfIncrement),
-            VersionIndentifier::Minor => new self($this->major, $newValue, $this->patchEmpty, build: $this->buildEmpty, outputFormat: $this->formatOfIncrement),
-            VersionIndentifier::Patch => new self($this->major, $this->minor, $newValue, build: $this->buildEmpty, outputFormat: $this->formatOfIncrement),
-            VersionIndentifier::Build => new self($this->major, $this->minor, $this->patch, $this->stability, $this->metaver, build: $newValue, outputFormat: $this->formatOfIncrement),
+            VersionIndentifier::Major => new self($newValue, 0, $this->patchEmpty, build: $this->buildEmpty, outputFormat: $this->outputformatOfIncrement),
+            VersionIndentifier::Minor => new self($this->major, $newValue, $this->patchEmpty, build: $this->buildEmpty, outputFormat: $this->outputformatOfIncrement),
+            VersionIndentifier::Patch => new self($this->major, $this->minor, $newValue, build: $this->buildEmpty, outputFormat: $this->outputformatOfIncrement),
+            VersionIndentifier::Build => new self($this->major, $this->minor, $this->patch, $this->stability, $this->metaver, build: $newValue, outputFormat: $this->outputformatOfIncrement),
             default => throw new \LogicException(\sprintf('Unsupported version identifier "%s" provided. Please report this bug.', $type->name)),
         };
     }
@@ -588,7 +588,7 @@ final class Version
             Stability::Alpha,
             Stability::Beta,
             Stability::Stable,
-            Stability::Rc => new self($this->major, $this->minor, $this->patchEmpty, $type, $newValue, build: $this->buildEmpty, outputFormat: $this->formatOfIncrement),
+            Stability::Rc => new self($this->major, $this->minor, $this->patchEmpty, $type, $newValue, build: $this->buildEmpty, outputFormat: $this->outputformatOfIncrement),
         };
     }
 
@@ -599,7 +599,7 @@ final class Version
             Stability::Alpha,
             Stability::Beta,
             Stability::Stable,
-            Stability::Rc => new self($this->major, $this->minor + 1, $this->patchEmpty, $type, $newValue, build: $this->buildEmpty, outputFormat: $this->formatOfIncrement),
+            Stability::Rc => new self($this->major, $this->minor + 1, $this->patchEmpty, $type, $newValue, build: $this->buildEmpty, outputFormat: $this->outputformatOfIncrement),
         };
     }
 }

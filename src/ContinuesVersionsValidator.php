@@ -18,19 +18,28 @@ final class ContinuesVersionsValidator
     /** @var array<int, array<int, Version>> [major][minor] = {Version} */
     private readonly array $versions;
 
+    /**
+     * @var Version[]
+     */
+    private readonly array $allVersions;
+
     /** @var array<int, Version> */
     private array $possibleVersions;
 
     public function __construct(Version ...$versions)
     {
         usort($versions, static fn (Version $a, Version $b) => $a->lowerThan($b) ? -1 : 1);
+
         $resolvedVersions = [];
+        $allVersions = [];
 
         foreach ($versions as $version) {
             $resolvedVersions[$version->major][$version->minor] = $version;
+            $allVersions[$version->full] = true;
         }
 
         $this->versions = $resolvedVersions;
+        $this->allVersions = $allVersions;
     }
 
     public function isContinues(Version $new, int $candidateOptions = 0): bool
@@ -39,6 +48,12 @@ final class ContinuesVersionsValidator
             $this->initializePossibleVersionsForEmptyList($new, $candidateOptions);
         } else {
             $this->computePossibleVersions($new, $candidateOptions);
+
+            foreach ($this->possibleVersions as $k => $possibleVersion) {
+                if ($this->allVersions[$possibleVersion->full]) {
+                    unset($this->possibleVersions[$k]);
+                }
+            }
         }
 
         ['withBuild' => $withBuild] = $this->getCandidateOptions($new, $candidateOptions);
@@ -75,27 +90,27 @@ final class ContinuesVersionsValidator
         ['withPrereleases' => $withPrereleases] = $this->getCandidateOptions($new, $candidateOptions);
 
         if ($withPrereleases === []) {
-            $this->possibleVersions = [Version::fromString('1.0', $new->outputFormat, $options)];
+            $this->possibleVersions = [Version::fromString('1.0', $new->outputformatOfIncrement, $options)];
 
             return;
         }
 
         $this->possibleVersions = [
-            Version::fromString('0.1', $new->outputFormat, options: $options),
+            Version::fromString('0.1', $new->outputformatOfIncrement, options: $options),
         ];
 
         $s = Stability::Alpha;
 
         while ($s->isLowerThan(Stability::Rc)) {
             if (\in_array($s, $withPrereleases, true)) {
-                $this->possibleVersions[] = Version::fromString(\sprintf('1.0-%s1', $s->label('upper')), $new->outputFormat, $options);
+                $this->possibleVersions[] = Version::fromString(\sprintf('1.0-%s1', $s->label('upper')), $new->outputformatOfIncrement, $options);
             }
 
             $s = $s->increment();
         }
 
         // No no point of adding the build as candidate as 1.0.0.0 is automatically provided
-        $this->possibleVersions[] = Version::fromString('1.0', $new->outputFormat, $options);
+        $this->possibleVersions[] = Version::fromString('1.0', $new->outputformatOfIncrement, $options);
     }
 
     /**
@@ -142,6 +157,7 @@ final class ContinuesVersionsValidator
         }
 
         $this->computePossibleVersionsFromMinor($major, $minor, $candidateOptions);
+        usort($this->possibleVersions, static fn (Version $a, Version $b) => $a->lowerThan($b) ? -1 : 1);
     }
 
     private function computePossibleVersionsFromLastExisting(int $candidateOptions): void
