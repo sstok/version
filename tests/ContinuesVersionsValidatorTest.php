@@ -18,6 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Rollerworks\Component\Version\ContinuesVersionsValidator;
 use Rollerworks\Component\Version\Version;
+use function PHPUnit\Framework\assertSame;
 
 /**
  * @internal
@@ -216,6 +217,11 @@ class ContinuesVersionsValidatorTest extends TestCase
         yield 'unstable #4' => ['0.1.1', ['0.2.0', '0.1.0'], ['0.1.1']];
         yield 'unstable #5' => ['0.2.1', ['0.2.0', '0.1.0'], ['0.2.1', '0.3.0', '1.0.0-BETA1', '1.0.0']];
 
+        yield 'unstable with newer existing' => ['0.2.1', ['0.2.0', '0.1.0', '1.0.0'], ['0.2.1', '0.3.0']];
+        yield 'stable with newer existing #1' => ['0.2.1', ['0.2.0', '0.1.0', '1.0.0', '1.1.0'], ['0.2.1', '0.3.0']];
+        yield 'stable with newer existing #2' => ['1.1.1', ['0.2.0', '0.1.0', '1.0.0', '1.1.0'], ['0.2.1', '0.3.0']];
+        yield 'stable with newer existing #2' => ['1.2.0', ['0.2.0', '0.1.0', '1.0.0', '1.1.0'], ['0.2.1', '0.3.0']];
+
         // Without patch
         yield 'unstable #1 without patch' => ['1.0-BETA1', ['0.2', '0.1'], ['0.3', '1.0-BETA1', '1.0']];
         yield 'unstable #2 without patch (exclude beta)' => ['1.0', ['0.2', '0.1'], ['0.3', '1.0'], Version::CANDIDATE_EXCLUDE_BETA];
@@ -226,6 +232,7 @@ class ContinuesVersionsValidatorTest extends TestCase
         yield 'stable #1' => ['1.2.0', ['1.0.0', '1.1.0'], ['1.1.1', '1.2.0-BETA1', '1.2.0', '2.0.0-ALPHA1', '2.0.0-BETA1', '2.0.0']];
         yield 'stable #2' => ['1.1.1', ['1.1.0', '2.0.0'], ['1.1.1', '1.2.0']];
 
+        yield 'stable (exclude alpha)' => ['1.2.0', ['1.0.0', '1.1.0'], ['1.3.0-BETA1', '1.3.0', '2.0.0-BETA1', '2.0.0'], Version::CANDIDATE_EXCLUDE_ALPHA];
         yield 'stable #1 without patch (exclude alpha)' => ['1.2', ['1.0.0', '1.1.0'], ['1.3-BETA1', '1.3', '2.0-BETA1', '2.0'], Version::CANDIDATE_EXCLUDE_ALPHA];
     }
 
@@ -274,29 +281,88 @@ class ContinuesVersionsValidatorTest extends TestCase
      */
     public static function provideNotInitialContinuesVersions(): iterable
     {
-        yield ['0.2.0'];
-        yield ['2.0-ALPHA1'];
-        yield ['2.0-BETA1'];
-        yield ['1.1'];
-        yield ['2.0'];
+        yield [
+            '0.2.0',
+            [
+                '0.1.0' => Version::fromString('0.1.0'),
+                '1.0.0-ALPHA1' => Version::fromString('1.0.0-ALPHA1'),
+                '1.0.0-BETA1' => Version::fromString('1.0.0-BETA1'),
+                '1.0.0' => Version::fromString('1.0.0'),
+            ]
+        ];
+
+        yield [
+            Version::fromString('0.2.0', '{major}.{minor}.{?patch}-{metaver:title}.x'),
+            [
+                '0.1.0' => Version::fromString('0.1.0'),
+                '1.0.0-Alpha.1' => Version::fromString('1.0.0-ALPHA1'),
+                '1.0.0-Beta.1' => Version::fromString('1.0.0-BETA1'),
+                '1.0.0' => Version::fromString('1.0.0'),
+            ]
+        ];
+
+        yield [
+            Version::fromString('0.2', '{major}.{minor}.{patch}-{metaver:title}.x', Version::INPUT_FILL_BUILD),
+            [
+                '0.1.0.0' => Version::fromString('0.1.0.0'),
+                '1.0.0.0-Alpha.1' => Version::fromString('1.0.0.0-ALPHA1'),
+                '1.0.0.0-Beta.1' => Version::fromString('1.0.0.0-BETA1'),
+                '1.0.0.0' => Version::fromString('1.0.0.0'),
+            ]
+        ];
+
+        yield [
+            '2.0-ALPHA1',
+            [
+                '0.1' => Version::fromString('0.1.0'),
+                '1.0-ALPHA1' => Version::fromString('1.0.0-ALPHA1'),
+                '1.0-BETA1' => Version::fromString('1.0.0-BETA1'),
+                '1.0' => Version::fromString('1.0.0'),
+            ]
+        ];
+
+        yield [
+            '2.0-BETA1',
+            [
+                '0.1' => Version::fromString('0.1.0'),
+                '1.0-ALPHA1' => Version::fromString('1.0.0-ALPHA1'),
+                '1.0-BETA1' => Version::fromString('1.0.0-BETA1'),
+                '1.0' => Version::fromString('1.0.0'),
+            ]
+        ];
+
+        yield [
+            '1.1',
+            [
+                '0.1' => Version::fromString('0.1.0'),
+                '1.0-ALPHA1' => Version::fromString('1.0.0-ALPHA1'),
+                '1.0-BETA1' => Version::fromString('1.0.0-BETA1'),
+                '1.0' => Version::fromString('1.0.0'),
+            ]
+        ];
+
+        yield [
+            '2.0',
+            [
+                '0.1' => Version::fromString('0.1.0'),
+                '1.0-ALPHA1' => Version::fromString('1.0.0-ALPHA1'),
+                '1.0-BETA1' => Version::fromString('1.0.0-BETA1'),
+                '1.0' => Version::fromString('1.0.0'),
+            ]
+        ];
     }
 
     #[Test]
     #[DataProvider('provideNotInitialContinuesVersions')]
-    public function it_rejects_non_continues_version_with_no_pre_existing(string $new): void
+    /**
+     * @param array<string, Version> $expectedVersions
+     */
+    public function it_rejects_non_continues_version_with_no_pre_existing(string|Version $new, array $expectedVersions): void
     {
         $validator = new ContinuesVersionsValidator();
 
-        self::assertFalse($validator->isContinues(Version::fromString($new)));
-        self::assertVersionsEquals(
-            [
-                Version::fromString('0.1.0'),
-                Version::fromString('1.0.0-ALPHA1'),
-                Version::fromString('1.0.0-BETA1'),
-                Version::fromString('1.0.0'),
-            ],
-            $validator->getPossibleVersions()
-        );
+        self::assertFalse($validator->isContinues(is_string($new) ? Version::fromString($new) : $new));
+        self::assertVersionsEquals($expectedVersions, $validator->getPossibleVersions());
     }
 
     /**
@@ -337,9 +403,6 @@ class ContinuesVersionsValidatorTest extends TestCase
     private static function assertVersionsEquals(array $expected, array $candidates): void
     {
         $formatter = static fn (Version $version): string => \sprintf("'%s' => '%s'", $version->format(), $version->full);
-        $expectedFormatted = array_map($formatter, $expected);
-        $candidatesFormatted = array_map($formatter, $candidates);
-
         $candidatesWithKey = [];
 
         foreach ($candidates as $v) {
@@ -349,7 +412,16 @@ class ContinuesVersionsValidatorTest extends TestCase
         self::assertEquals(
             $expected,
             $candidatesWithKey,
-            \sprintf('Expected [%s] but got [%s]', implode(', ', $expectedFormatted), implode(', ', $candidatesFormatted)),
+            \sprintf(
+                'Expected [%s] but got [%s]',
+                implode(', ', array_map($formatter, $expected)),
+                implode(', ', array_map($formatter, $candidates)),
+            ),
+        );
+        self::assertSame(
+            $ek = array_keys($expected),
+            $ck = array_keys($candidatesWithKey),
+            \sprintf('Versons order does not match. Expected [%s] but got [%s].', implode(', ', $ek), implode(', ', $ck)),
         );
     }
 }

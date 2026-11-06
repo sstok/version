@@ -194,7 +194,7 @@ final class ContinuesVersionsValidator
             }
 
             if ($withPatch) {
-                $this->possibleVersions = [$version->getNextIncreaseOf(VersionIndentifier::Patch)];
+                $this->possibleVersions[] = $version->getNextIncreaseOf(VersionIndentifier::Patch);
             }
 
             $this->possibleVersions[] = $version->getNextIncreaseOf(VersionIndentifier::Minor);
