@@ -248,8 +248,8 @@ final class Version
      * Note:
      *
      * - Use the bitmask {@see CANDIDATE_EXCLUDE_*} to exclude certain candidates.
-     * - Only identifiers that were provided with {@see fromString()} will be considered
-     *   for incrementing (even when `$options` isn't provided).
+     * - Only identifiers that were provided at construction will be considered
+     *   for incrementing (even when `$options` is empty).
      * - When the patch was omitted (null) it will not be considered.
      * - When build was omitted (null) it will not be considered.
      *
@@ -268,6 +268,9 @@ final class Version
      * * With build: 0.1.0.0 -> [0.1.0.1, 0.2.0.0, 1.0.0.0-beta1, 1.0.0.0]
      * * With build: 0.1.0.1 -> [0.1.0.2, 0.2.0.0, 1.0.0.0-beta1, 1.0.0.0]
      * * With build: 1.1.1.1 -> [1.1.1.2, 1.2.0.0, 1.0.0.0-beta1, 1.0.0.0]
+     *
+     * @param int $options A bitmask of {@see CANDIDATE_EXCLUDE_*} to exclude
+     *                     certain version candidates
      *
      * @return Version[]
      */
